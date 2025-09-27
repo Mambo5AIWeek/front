@@ -17,6 +17,7 @@ export function Chat() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [consentAccepted, setConsentAccepted] = useState<boolean>(false);
   const [formCompleted, setFormCompleted] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Removed WebSocket functionality - now using REST API
 
@@ -31,10 +32,10 @@ async function handleSubmit(text?: string) {
   setMessages(prev => [...prev, { content: messageText, role: "user", id: traceId }]);
   setQuestion("");
 
-  // Call disease prediction API for symptom analysis
+  // Call medical chat API for conversational diagnosis
   setTimeout(async () => {
-    console.log('🔄 Processing user message for symptoms:', messageText);
-    await processDiseasePrediction(messageText);
+    console.log('🔄 Processing user message with medical AI:', messageText);
+    await processMedicalChat(messageText);
     setIsLoading(false);
   }, 1000); // Brief delay for better UX
 
@@ -94,93 +95,26 @@ async function handleSubmit(text?: string) {
     createFormMessage(sampleForms.medicalConsentForm);
   };
 
-  // Function to extract symptoms from user message
-  const extractSymptomsFromMessage = (message: string): string[] => {
-    const lowerMessage = message.toLowerCase();
-    
-    // Comprehensive symptom dictionary with variations
-    const symptomPatterns = {
-      // Headache/Pain symptoms
-      'headache': ['dolor de cabeza', 'headache', 'cefalea', 'migraña', 'migraine', 'me duele la cabeza', 'cabeza me duele'],
-      'sore throat': ['dolor de garganta', 'sore throat', 'garganta irritada', 'throat pain', 'me duele la garganta'],
-      'stomach pain': ['dolor abdominal', 'stomach pain', 'dolor de estómago', 'dolor de barriga', 'me duele el estómago'],
-      'muscle pain': ['dolor muscular', 'muscle pain', 'dolor de músculos', 'músculos doloridos', 'body aches'],
-      'joint pain': ['dolor articular', 'joint pain', 'dolor de articulaciones', 'articulaciones doloridas'],
-      'chest pain': ['dolor en el pecho', 'chest pain', 'dolor torácico', 'me duele el pecho'],
-      'back pain': ['dolor de espalda', 'back pain', 'espalda dolorida', 'me duele la espalda'],
-      
-      // Fever/Temperature symptoms  
-      'fever': ['fiebre', 'fever', 'temperatura alta', 'calentura', 'tengo fiebre', 'me siento con fiebre'],
-      'chills': ['escalofríos', 'chills', 'temblores de frío', 'tengo escalofríos', 'me dan escalofríos'],
-      
-      // Respiratory symptoms
-      'cough': ['tos', 'cough', 'toser', 'tengo tos', 'me da tos', 'tos seca', 'tos con flema'],
-      'shortness of breath': ['dificultad para respirar', 'shortness of breath', 'falta de aire', 'me falta el aire'],
-      'nasal congestion': ['congestión nasal', 'nasal congestion', 'nariz tapada', 'congestión', 'tengo la nariz tapada'],
-      'runny nose': ['secreción nasal', 'runny nose', 'nariz que gotea', 'mucosidad nasal'],
-      
-      // Gastrointestinal symptoms
-      'nausea': ['náuseas', 'nausea', 'ganas de vomitar', 'tengo náuseas', 'me dan náuseas'],
-      'vomiting': ['vómito', 'vomiting', 'vomitar', 'he vomitado', 'tengo vómitos'],
-      'diarrhea': ['diarrea', 'diarrhea', 'deposiciones líquidas', 'tengo diarrea'],
-      'constipation': ['estreñimiento', 'constipation', 'no puedo defecar', 'estreñido'],
-      'loss of appetite': ['pérdida de apetito', 'loss of appetite', 'no tengo hambre', 'sin apetito'],
-      
-      // Neurological symptoms
-      'dizziness': ['mareo', 'dizziness', 'vertigo', 'me mareo', 'tengo mareos'],
-      'confusion': ['confusión', 'confusion', 'me siento confundido', 'desorientado'],
-      
-      // General symptoms
-      'fatigue': ['fatiga', 'cansancio', 'tired', 'exhausted', 'me siento cansado', 'agotamiento', 'sin energía'],
-      'weakness': ['debilidad', 'weakness', 'me siento débil', 'sin fuerzas'],
-      'sweating': ['sudoración', 'sweating', 'sudor', 'sudo mucho', 'transpiración excesiva'],
-      'insomnia': ['insomnio', 'insomnia', 'no puedo dormir', 'problemas para dormir', 'desvelo'],
-      'rash': ['sarpullido', 'rash', 'erupciones en la piel', 'manchas en la piel', 'irritación cutánea'],
-      'itching': ['picazón', 'itching', 'comezón', 'me pica', 'prurito']
-    };
+  // Symptom extraction removed - now using conversational API that handles natural language directly
 
-    const foundSymptoms = new Set<string>();
-    
-    // Check for each symptom pattern
-    Object.entries(symptomPatterns).forEach(([symptom, patterns]) => {
-      patterns.forEach(pattern => {
-        if (lowerMessage.includes(pattern.toLowerCase())) {
-          foundSymptoms.add(symptom);
-        }
-      });
-    });
-
-    // Convert set to array
-    let symptomsArray = Array.from(foundSymptoms);
-    
-    // If no specific symptoms found, use the entire message but clean it up
-    if (symptomsArray.length === 0) {
-      // Remove common conversational phrases to focus on symptoms
-      let cleanMessage = message
-        .replace(/^(tengo|me siento|siento|I have|I feel|I am experiencing)/i, '')
-        .replace(/por favor|please|ayuda|help/gi, '')
-        .trim();
-      
-      if (cleanMessage.length > 0) {
-        symptomsArray = [cleanMessage];
-      } else {
-        symptomsArray = [message.trim()];
-      }
-    }
-
-    return symptomsArray;
-  };
-
-  // Function to call the real disease prediction API
-  const callDiseaseAPI = async (symptoms: string[]) => {
+  // Function to call the medical chat API
+  const callMedicalChatAPI = async (message: string) => {
     try {
-      const requestBody = {
-        symptoms: symptoms,
-        confidence_threshold: 0.0
+      const requestBody: any = {
+        message: message
       };
-      console.log('🌐 Making POST request to API:', requestBody);
       
-      const response = await fetch('https://aiweek.jguevara.dev/predict', {
+      // Include session_id if we have one for conversation continuity
+      if (sessionId) {
+        requestBody.session_id = sessionId;
+        console.log('🔗 Including session ID in request:', sessionId);
+      } else {
+        console.log('🆕 New conversation - no session ID yet');
+      }
+      
+      console.log('🌐 Making POST request to chat API:', requestBody);
+      
+      const response = await fetch('https://aiweek.jguevara.dev/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,55 +127,50 @@ async function handleSubmit(text?: string) {
       }
 
       const data = await response.json();
+      console.log('✅ Chat API response received:', data);
+      
+      // Always update session_id when API provides one
+      if (data.session_id) {
+        if (data.session_id !== sessionId) {
+          setSessionId(data.session_id);
+          console.log('📝 Session ID updated:', data.session_id);
+        } else {
+          console.log('🔄 Session ID confirmed:', data.session_id);
+        }
+      }
+      
       return data;
     } catch (error) {
-      console.error('Error calling disease API:', error);
+      console.error('Error calling medical chat API:', error);
       throw error;
     }
   };
 
-  // Function to process API response and show disease chart
-  const processDiseasePrediction = async (userMessage: string) => {
+  // Function to process medical chat conversation
+  const processMedicalChat = async (userMessage: string) => {
     try {
-      // Extract symptoms from user message
-      const symptoms = extractSymptomsFromMessage(userMessage);
-      console.log('🔍 Extracted symptoms:', symptoms);
+      console.log('💬 Sending message to medical chat API:', userMessage);
       
-      // Call the API
-      console.log('📡 Calling API with symptoms:', symptoms);
-      const apiResponse = await callDiseaseAPI(symptoms);
-      console.log('✅ API response received:', apiResponse);
+      // Call the medical chat API
+      const apiResponse = await callMedicalChatAPI(userMessage);
       
-      // Transform API response to our chart format
-      const diseaseData = apiResponse.predictions.map(([name, probability]: [string, number]) => ({
-        name,
-        probability: probability * 100 // Convert to percentage
-      }));
-
-      // Create response message
+      // Create response message from API
       const responseTraceId = uuidv4();
-      let content = `He analizado los síntomas que describió usando inteligencia artificial médica.
-
-**📋 Síntomas procesados:** ${symptoms.join(', ')}
-
-**🔬 Análisis de IA completado**
-
-A continuación se muestran los diagnósticos más probables según la evaluación de síntomas:`;
-
-      // Add information about unrecognized symptoms if any
-      if (apiResponse.unrecognized_symptoms && apiResponse.unrecognized_symptoms.length > 0) {
-        content += `\n\n⚠️ **Síntomas no reconocidos:** ${apiResponse.unrecognized_symptoms.join(', ')}`;
-      }
-
       const responseMessage: message = {
-        content,
+        content: apiResponse.response,
         role: 'assistant',
         id: responseTraceId,
-        type: 'chart',
-        diseaseData: diseaseData
+        type: 'text'
       };
       
       setMessages(prev => [...prev, responseMessage]);
+      
+      // Log conversation status
+      if (apiResponse.conversation_complete) {
+        console.log('✅ Medical conversation completed');
+      } else {
+        console.log('🔄 Medical conversation continues...');
+      }
       
     } catch (error) {
       // Handle API errors
@@ -287,7 +216,12 @@ Lo siento, no pude procesar su consulta en este momento. Esto puede deberse a:
         <div ref={messagesEndRef} className="shrink-0 min-w-[24px] min-h-[24px]"/>
       </div>
       {consentAccepted && formCompleted && (
-        <div className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+        <div className="flex flex-col mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+          {sessionId && (
+            <div className="text-xs text-muted-foreground text-center">
+              💬 Conversación activa - ID: {sessionId.slice(-8)}
+            </div>
+          )}
           <ChatInput  
             question={question}
             setQuestion={setQuestion}

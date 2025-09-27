@@ -68,14 +68,14 @@ export const ChatForm: React.FC<ChatFormProps> = ({ formData, onFormSubmit, onCo
       const formSubmissionData = { ...values };
       
       // Special handling for medical consent form
-      if (formData.title.includes("Agente Conversacional") || formData.title.includes("Consentimiento")) {
-        if (formSubmissionData.consent_response === "No acepto") {
+      if (formData.title.includes("Conversational Agent") || formData.title.includes("Consent")) {
+        if (formSubmissionData.consent_response === "I decline") {
           if (onConsentDeclined) {
             onConsentDeclined();
           }
           return;
-        } else if (formSubmissionData.consent_response === "Acepto") {
-          console.log("Usuario aceptó el consentimiento:", formSubmissionData);
+        } else if (formSubmissionData.consent_response === "I accept") {
+          console.log("User accepted consent:", formSubmissionData);
           if (onConsentAccepted) {
             onConsentAccepted();
           }
@@ -168,7 +168,7 @@ export const ChatForm: React.FC<ChatFormProps> = ({ formData, onFormSubmit, onCo
               aproximadamente 5–10 minutos.
             </p>
             <p className="font-medium">
-              Antes de continuar, necesito su consentimiento.
+              Before continuing, I need your consent.
             </p>
           </div>
         )}
@@ -178,7 +178,9 @@ export const ChatForm: React.FC<ChatFormProps> = ({ formData, onFormSubmit, onCo
         {/* 4. Declaration Title - Centered and Bold */}
         {isMedicalForm && (
           <h4 className="text-blue-900 dark:text-blue-100 text-base font-bold text-center mb-3">
-            Consentimiento para Anamnesis Básica
+                        Consent for Basic Anamnesis
+
+          
 
           </h4>
         )}
@@ -187,11 +189,11 @@ export const ChatForm: React.FC<ChatFormProps> = ({ formData, onFormSubmit, onCo
         {isMedicalForm && (
           <div className="text-blue-700 dark:text-blue-200 leading-relaxed text-sm mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <p>
-              Declaro que comprendo que este agente conversacional tiene fines informativos y educativos, 
-              no sustituye la atención médica profesional, y que los resultados son estimaciones 
-              probabilísticas sujetas a error. La información que proporcione se usará solo durante esta 
-              sesión con fines de demostración y no se almacenará de forma permanente ni se compartirá 
-              con terceros. En caso de presentar síntomas de urgencia, debo buscar atención inmediata.
+              I declare that I understand that this conversational agent is for informational and educational purposes, 
+              does not substitute professional medical care, and that results are probabilistic estimates 
+              subject to error. The information I provide will only be used during this 
+              session for demonstration purposes and will not be permanently stored or shared 
+              with third parties. In case of urgent symptoms, I must seek immediate medical attention.
             </p>
           </div>
         )}
@@ -254,18 +256,18 @@ export const createFormFromJSON = (jsonString: string): FormData | null => {
 // Example form configurations
 export const sampleForms = {
   medicalConsentForm: {
-    title: "Agente Conversacional de Anamnesis",
+    title: "Conversational Anamnesis Agent",
     description: "",
     fields: [
       {
         id: "consent_response",
-        label: "¿Acepta continuar bajo estas condiciones?",
+        label: "Do you accept to continue under these conditions?",
         type: "select" as const,
-        options: ["", "Acepto", "No acepto"],
+        options: ["", "I accept", "I decline"],
         required: true
       }
     ],
-    submitText: "Continuar"
+    submitText: "Continue"
   },
 
   contactForm: {
