@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cx } from 'classix';
 import { SparklesIcon } from './icons';
 import { Markdown } from './markdown';
 import { message } from "../../interfaces/interfaces"
 import { MessageActions } from '@/components/custom/actions';
+import { ChatForm } from './form';
 
-export const PreviewMessage = ({ message }: { message: message; }) => {
+export const PreviewMessage = ({ message, onConsentAccepted, onConsentDeclined }: { message: message; onConsentAccepted?: () => void; onConsentDeclined?: () => void; }) => {
 
   return (
     <motion.div
@@ -27,7 +27,17 @@ export const PreviewMessage = ({ message }: { message: message; }) => {
         )}
 
         <div className="flex flex-col w-full">
-          {message.content && (
+          {message.type === 'form' && message.formData ? (
+            <ChatForm 
+              formData={message.formData} 
+              onFormSubmit={(data) => {
+                console.log('Form submitted:', data);
+                // You can add custom form submission logic here
+              }} 
+              onConsentAccepted={onConsentAccepted}
+              onConsentDeclined={onConsentDeclined}
+            />
+          ) : message.content && (
             <div className="flex flex-col gap-4 text-left">
               <Markdown>{message.content}</Markdown>
             </div>

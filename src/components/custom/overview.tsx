@@ -1,7 +1,12 @@
 import { motion } from 'framer-motion';
-import { MessageCircle, BotIcon } from 'lucide-react';
+import { MessageCircle, BotIcon, FormInput } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-export const Overview = () => {
+interface OverviewProps {
+  onShowForm?: () => void;
+}
+
+export const Overview = ({ onShowForm }: OverviewProps) => {
   return (
     <>
     <motion.div
@@ -19,10 +24,26 @@ export const Overview = () => {
           <MessageCircle size={44}/>
         </p>
         <p>
-          Welcome to <strong>chatbot-ui</strong><br />
-          a open source template made by<br />
-          <strong>Leon Binder</strong> and <strong>Christoph Handschuh</strong>.
+          Bienvenido al <strong>Asistente de Anamnesis Médica</strong><br />
+          Un agente conversacional para evaluación<br />
+          <strong>básica de salud</strong>.
         </p>
+        
+        {onShowForm && (
+          <div className="flex flex-col gap-4 items-center">
+            <p className="text-sm text-muted-foreground">
+              Iniciar consulta médica virtual:
+            </p>
+            <Button 
+              onClick={onShowForm}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <FormInput size={16} />
+              Iniciar Anamnesis
+            </Button>
+          </div>
+        )}
       </div>
     </motion.div>
     </>

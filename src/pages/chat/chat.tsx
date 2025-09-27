@@ -6,6 +6,7 @@ import { message } from "../../interfaces/interfaces"
 import { Overview } from "@/components/custom/overview";
 import { Header } from "@/components/custom/header";
 import {v4 as uuidv4} from 'uuid';
+import { sampleForms, createFormFromJSON, FormData } from "@/components/custom/form";
 
 //const socket = new WebSocket("ws://localhost:8090"); //change to your websocket endpoint
 
@@ -19,6 +20,7 @@ export function Chat() {
   const [messages, setMessages] = useState<message[]>([]);
   const [question, setQuestion] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [consentAccepted, setConsentAccepted] = useState<boolean>(false);
 
   const messageHandlerRef = useRef<((event: MessageEvent) => void) | null>(null);
 
@@ -54,7 +56,17 @@ async function handleSubmit(text?: string) {
           ? lastMessage.content + event.data 
           : event.data;
         
-        const newMessage = { content: newContent, role: "assistant", id: traceId };
+        // Check if the complete message contains a form
+        const formData = parseFormFromMessage(newContent);
+        
+        const newMessage: message = { 
+          content: newContent, 
+          role: "assistant", 
+          id: traceId,
+          type: formData ? 'form' : 'text',
+          formData: formData || undefined
+        };
+        
         return lastMessage?.role === "assistant"
           ? [...prev.slice(0, -1), newMessage]
           : [...prev, newMessage];
@@ -73,25 +85,88 @@ async function handleSubmit(text?: string) {
   }
 }
 
+  // Function to create and display a form as chatbot output
+  const createFormMessage = (formData: FormData) => {
+    const traceId = uuidv4();
+    const formMessage: message = {
+      content: '',
+      role: 'assistant',
+      id: traceId,
+      type: 'form',
+      formData: formData
+    };
+    setMessages(prev => [...prev, formMessage]);
+  };
+
+  // Function to parse and display forms from chatbot responses
+  const parseFormFromMessage = (content: string): FormData | null => {
+    // Check if the message contains a form JSON
+    const formMatch = content.match(/\[FORM\](.*?)\[\/FORM\]/s);
+    if (formMatch) {
+      return createFormFromJSON(formMatch[1]);
+    }
+    return null;
+  };
+
+  // Function to handle consent acceptance
+  const handleConsentAccepted = () => {
+    // Add combined acceptance and question message
+    const combinedTraceId = uuidv4();
+    const combinedMessage: message = {
+      content: 'Gracias. Iniciaré con algunas preguntas sobre sus síntomas y antecedentes.\n\n\n\n¿Cuál es el motivo principal de su consulta hoy?',
+      role: 'assistant',
+      id: combinedTraceId,
+      type: 'text'
+    };
+    
+    setMessages(prev => [...prev, combinedMessage]);
+    setConsentAccepted(true);
+  };
+
+  // Function to handle consent decline
+  const handleConsentDeclined = () => {
+    const declineTraceId = uuidv4();
+    const declineMessage: message = {
+      content: 'Comprendo y respeto su decisión. No continuaré con la interacción. Si necesita orientación médica, por favor contacte a un profesional de la salud o a los servicios de urgencias en caso de síntomas graves. Que tenga buen día.',
+      role: 'assistant',
+      id: declineTraceId,
+      type: 'text'
+    };
+    
+    setMessages(prev => [...prev, declineMessage]);
+  };
+
+  // Function to show medical consent form (primary use case)
+  const showMedicalConsentForm = () => {
+    createFormMessage(sampleForms.medicalConsentForm);
+  };
+
   return (
     <div className="flex flex-col min-w-0 h-dvh bg-background">
       <Header/>
       <div className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4" ref={messagesContainerRef}>
-        {messages.length == 0 && <Overview />}
+        {messages.length == 0 && <Overview onShowForm={showMedicalConsentForm} />}
         {messages.map((message, index) => (
-          <PreviewMessage key={index} message={message} />
+          <PreviewMessage 
+            key={index} 
+            message={message} 
+            onConsentAccepted={handleConsentAccepted}
+            onConsentDeclined={handleConsentDeclined}
+          />
         ))}
         {isLoading && <ThinkingMessage />}
         <div ref={messagesEndRef} className="shrink-0 min-w-[24px] min-h-[24px]"/>
       </div>
-      <div className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
-        <ChatInput  
-          question={question}
-          setQuestion={setQuestion}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
-      </div>
+      {consentAccepted && (
+        <div className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+          <ChatInput  
+            question={question}
+            setQuestion={setQuestion}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
     </div>
   );
 };
