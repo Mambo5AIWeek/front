@@ -5,8 +5,9 @@ import { Markdown } from './markdown';
 import { message } from "../../interfaces/interfaces"
 import { MessageActions } from '@/components/custom/actions';
 import { ChatForm } from './form';
+import { DiseaseChart } from './disease-chart';
 
-export const PreviewMessage = ({ message, onConsentAccepted, onConsentDeclined }: { message: message; onConsentAccepted?: () => void; onConsentDeclined?: () => void; }) => {
+export const PreviewMessage = ({ message, onConsentAccepted, onConsentDeclined, onFormSubmitted }: { message: message; onConsentAccepted?: () => void; onConsentDeclined?: () => void; onFormSubmitted?: () => void; }) => {
 
   return (
     <motion.div
@@ -32,11 +33,22 @@ export const PreviewMessage = ({ message, onConsentAccepted, onConsentDeclined }
               formData={message.formData} 
               onFormSubmit={(data) => {
                 console.log('Form submitted:', data);
-                // You can add custom form submission logic here
+                if (onFormSubmitted) {
+                  onFormSubmitted();
+                }
               }} 
               onConsentAccepted={onConsentAccepted}
               onConsentDeclined={onConsentDeclined}
             />
+          ) : message.type === 'chart' && message.diseaseData ? (
+            <div className="flex flex-col gap-4">
+              {message.content && (
+                <div className="text-left mb-4">
+                  <Markdown>{message.content}</Markdown>
+                </div>
+              )}
+              <DiseaseChart data={message.diseaseData} />
+            </div>
           ) : message.content && (
             <div className="flex flex-col gap-4 text-left">
               <Markdown>{message.content}</Markdown>

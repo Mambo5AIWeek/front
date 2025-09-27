@@ -29,21 +29,25 @@ export const Overview = ({ onShowForm }: OverviewProps) => {
           <strong>básica de salud</strong>.
         </p>
         
-        {onShowForm && (
-          <div className="flex flex-col gap-4 items-center">
-            <p className="text-sm text-muted-foreground">
-              Iniciar consulta médica virtual:
-            </p>
-            <Button 
-              onClick={onShowForm}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <FormInput size={16} />
-              Iniciar Anamnesis
-            </Button>
-          </div>
-        )}
+        <div className="flex flex-col gap-4 items-center">
+          {onShowForm && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Iniciar consulta médica virtual:
+              </p>
+              <Button 
+                onClick={onShowForm}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <FormInput size={16} />
+                Iniciar Anamnesis
+              </Button>
+            </>
+          )}
+          
+
+        </div>
       </div>
     </motion.div>
     </>
